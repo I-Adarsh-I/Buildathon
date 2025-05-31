@@ -12,7 +12,7 @@ passport.use(
       passwordField: 'password',
     },
     async (email, password, done) => {
-      console.log("email and pass: ", email, password);
+      // console.log("email and pass: ", email, password);
       try {
         const user = await User.findOne({ email });
         if (!user) {
@@ -50,7 +50,7 @@ passport.use(
 );
 
 passport.serializeUser((user, done) => {
-  console.log("logging user from passport: ", user);
+  // console.log("logging user from passport: ", user);
   done(null, user._id || user.id);
 });
 
