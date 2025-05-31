@@ -3,14 +3,15 @@ const User = require('../../models/users.models');
 exports.googleCallback = async (req, res) => {
   try {
     if (!req.user) {
+      console.log("Went inside");
       return res.redirect('/api/v1/auth/failure');
     }
 
     // You can now use req.user to fetch details
-    const { id, displayName, emails, photos } = req.user;
+    const { id, name, email, profilePhoto } = req.user;
 
-    const email = emails?.[0]?.value;
-    const profilePhoto = photos?.[0]?.value;
+    // const email = emails?.[0]?.value;
+    // const profilePhoto = photos?.[0]?.value;
 
     // Check if user already exists
     let user = await User.findOne({ googleId: id });
@@ -27,7 +28,7 @@ exports.googleCallback = async (req, res) => {
       } else {
         // New Google user
         user = await User.create({
-          name: displayName,
+          name: name,
           email: email,
           googleId: id,
           profilePhoto
@@ -40,7 +41,7 @@ exports.googleCallback = async (req, res) => {
       name: user.name,
       email: user.email
     };
-
+    
     return res.redirect('/api/v1/auth/success');
   } catch (error) {
     console.error('Google login error:', error);
