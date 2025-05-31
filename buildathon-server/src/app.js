@@ -6,6 +6,7 @@ const session = require("express-session");
 const routes = require("./routes");
 const passport = require("passport");
 const connectDB = require("./config/db");
+const errorHandler = require('./middlewares/errorHandler');
 
 require("./config/passport");
 
@@ -18,7 +19,7 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: process.env.PRODUCTION,
+      secure: process.env.NODE_ENV === 'development',
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24,
     },
@@ -29,5 +30,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/api/v1", routes);
+app.use(errorHandler);
 
 module.exports = app;
