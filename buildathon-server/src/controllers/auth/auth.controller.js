@@ -48,6 +48,13 @@ exports.googleCallback = async (req, res) => {
   }
 };
 
+exports.loginSuccess = (req, res) => {
+  res.status(200).json({
+    message: 'Login successful',
+    user: req.user, // Passport attaches user here
+  });
+};
+
 exports.authSuccess = (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ success: false, message: 'No active session' });
@@ -57,4 +64,25 @@ exports.authSuccess = (req, res) => {
 
 exports.authFailure = (req, res) => {
   res.status(401).json({ success: false, message: 'Authentication failed' });
+};
+
+exports.logoutHandler = (req, res, next) => {
+  if (!req.session || !req.session.user) {
+    return res.status(400).json({ message: 'No active session to log out.' });
+  }
+  
+  req.logout(function(err) {
+    if (err) {
+      return next(err);
+    }
+
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Logout failed.' });
+      }
+
+      res.clearCookie('connect.sid');
+      return res.status(200).json({ message: 'Successfully logged out.' });
+    });
+  });
 };
