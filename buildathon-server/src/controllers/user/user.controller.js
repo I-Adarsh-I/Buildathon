@@ -1,11 +1,12 @@
-const User = require('../../models/User');
+const User = require('../../models/users.models');
+const bcrypt = require('bcrypt');
 
 exports.createUser = async (req, res) => {
   try {
     const { name, email, password, googleId, profilePhoto } = req.body;
 
-    if (!name || !email) {
-      return res.status(400).json({ message: 'Name and email are required.' });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email and password are mandatory fields that cannot be empty.' });
     }
 
     const existingUser = await User.findOne({ email });
@@ -13,7 +14,17 @@ exports.createUser = async (req, res) => {
       return res.status(409).json({ message: 'User already exists with this email.' });
     }
 
-    const user = await User.create({ name, email, password, googleId, profilePhoto });
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      googleId,
+      profilePhoto
+    });
+    
     return res.status(201).json({ message: 'User created successfully.', user });
   } catch (error) {
     console.error('Error creating user:', error);

@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-const userController = require('../../controllers/userController');
+const userController = require('../../controllers/user/user.controller');
 const isAuthenticated = require('../../middlewares/isAuthenticated')
 
-router.post('/create', isAuthenticated, userController.createUser);
+router.post('/create', userController.createUser);
 
 router.get('/me', isAuthenticated, userController.getCurrentUser);
 

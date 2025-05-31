@@ -4,6 +4,17 @@ const router = express.Router();
 
 const authController = require('../../controllers/auth/auth.controller');
 
+// Normal login (email & password)
+router.post(
+  '/login',
+  passport.authenticate('local', {
+    failureRedirect: '/api/v1/auth/failure',
+    failureFlash: false,
+  }),
+  authController.loginSuccess
+);
+
+router.get('/logout', authController.logoutHandler);
 // Google Auth
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
