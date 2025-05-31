@@ -2,11 +2,13 @@ require("dotenv").config();
 
 const express = require("express");
 const app = express();
+
 const session = require("express-session");
-const routes = require("./routes");
 const passport = require("passport");
+const routes = require("./routes");
 const connectDB = require("./config/db");
 const errorHandler = require('./middlewares/errorHandler');
+
 
 require("./config/passport");
 
@@ -18,7 +20,7 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
-    cookie: {
+    cookie:{
       secure: process.env.NODE_ENV === 'development',
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24,
