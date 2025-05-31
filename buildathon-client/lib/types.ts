@@ -1,0 +1,108 @@
+// User types
+export type UserRole = 'brand' | 'creator' | 'admin';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  image?: string;
+  role: UserRole;
+  bio?: string;
+  socialLinks?: {
+    instagram?: string;
+    youtube?: string;
+    tiktok?: string;
+    twitter?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Campaign types
+export type CampaignStatus = 'draft' | 'active' | 'completed' | 'cancelled';
+export type Platform = 'instagram' | 'youtube' | 'tiktok' | 'twitter';
+export type DeliverableType = 'post' | 'story' | 'reel' | 'video' | 'tweet';
+
+export interface Campaign {
+  id: string;
+  brandId: string;
+  name: string;
+  description: string;
+  goal: string;
+  budget: number;
+  startDate: string;
+  endDate: string;
+  platforms: Platform[];
+  deliverables: {
+    type: DeliverableType;
+    count: number;
+    description?: string;
+  }[];
+  targetAudience: {
+    ageRange?: [number, number];
+    demographics?: string[];
+    interests?: string[];
+    locations?: string[];
+  };
+  status: CampaignStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Application types
+export type ApplicationStatus = 'pending' | 'approved' | 'rejected' | 'completed';
+
+export interface Application {
+  id: string;
+  campaignId: string;
+  creatorId: string;
+  proposal: string;
+  status: ApplicationStatus;
+  deliverables?: {
+    type: DeliverableType;
+    content: string;
+    submittedAt: string;
+    status: 'pending' | 'approved' | 'rejected';
+  }[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Message types
+export interface Message {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  campaignId?: string;
+  content: string;
+  read: boolean;
+  createdAt: string;
+}
+
+// Contract and payment types
+export type PaymentStatus = 'pending' | 'completed' | 'failed';
+
+export interface Payment {
+  id: string;
+  campaignId: string;
+  brandId: string;
+  creatorId: string;
+  amount: number;
+  status: PaymentStatus;
+  transactionId?: string;
+  createdAt: string;
+}
+
+export interface Contract {
+  id: string;
+  campaignId: string;
+  brandId: string;
+  creatorId: string;
+  fileUrl: string;
+  signed: {
+    brand: boolean;
+    creator: boolean;
+  };
+  createdAt: string;
+  updatedAt: string;
+}

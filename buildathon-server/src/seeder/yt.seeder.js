@@ -41,11 +41,12 @@ async function seedAll() {
         name: row.channel_name, // Influencer's main name, often same as channel_name
         contact_email: null, // Assuming contact_email is not in YouTube CSV, set to null
         youtube: { // Data for the 'youtube' subdocument
-          channel_link: row.video_url, // Using video_url as channel_link for now, adjust if you have a dedicated channel_link column
+          channel_link: row.channel_url, // Using video_url as channel_link for now, adjust if you have a dedicated channel_link column
           channel_name: row.channel_name,
+          channel_bio: row.bio,
           subscribers: parseInt(row.subscribers) || 0,
           total_views: parseInt(row.total_channel_views) || 0,
-          // total_videos: parseInt(row.total_channel_videos) || 0 // This field is not in the new influencer schema for yt
+          total_videos: parseInt(row.total_channel_videos) || 0 // This field is not in the new influencer schema for yt
         },
         content: {
           contentType: 'video',
@@ -57,9 +58,9 @@ async function seedAll() {
           comments: parseInt(row.video_comments) || 0,
           url: row.video_url,
           thumbnails: {
-            default: row.thumbnail_medium,
-            medium: row.thumbnail_medium,
-            high: row.thumbnail_medium
+            default: row.thumbnail_medium || "",
+            medium: row.thumbnail_medium || "",
+            high: row.thumbnail_medium || ""
           }
         }
       };
@@ -67,42 +68,42 @@ async function seedAll() {
   });
 
   // Seed Instagram data
-  await seedPlatform('instagram', instagramFiles, {
-    separator: ',',
-    parseRow: (row) => {
-      const parsedDate = new Date(row['Posted At']);
-      const publishedAt = isNaN(parsedDate.getTime()) ? null : parsedDate;
+  // await seedPlatform('instagram', instagramFiles, {
+  //   separator: ',',
+  //   parseRow: (row) => {
+  //     const parsedDate = new Date(row['Posted At']);
+  //     const publishedAt = isNaN(parsedDate.getTime()) ? null : parsedDate;
 
-      if (publishedAt === null) {
-        console.warn(`⚠️ Invalid date format for 'Posted At' in row for user: ${row.Username}. Setting publishedAt to null.`);
-      }
+  //     if (publishedAt === null) {
+  //       console.warn(`⚠️ Invalid date format for 'Posted At' in row for user: ${row.Username}. Setting publishedAt to null.`);
+  //     }
 
-      return {
-        name: row.Username, // Influencer's main name
-        contact_email: null, // Assuming contact_email is not in Instagram CSV, set to null
-        instagram: { // Data for the 'instagram' subdocument
-          profile_handle: row.Username,
-          followers: parseInt(row.Followers) || 0,
-          views: 0, // 'Views' is not in the new Instagram header, defaulting to 0
-        },
-        content: { // Content data (for Content model)
-          contentType: 'post',
-          title: row.Caption,
-          mediaId: row['Image URL'],
-          publishedAt: publishedAt,
-          views: 0,
-          likes: parseInt(row.Likes) || 0,
-          comments: parseInt(row.Comments) || 0,
-          url: row['Image URL'],
-          thumbnails: {
-            default: row['Image URL'],
-            medium: row['Image URL'],
-            high: row['Image URL']
-          }
-        }
-      };
-    }
-  });
+  //     return {
+  //       name: row.Username, // Influencer's main name
+  //       contact_email: null, // Assuming contact_email is not in Instagram CSV, set to null
+  //       instagram: { // Data for the 'instagram' subdocument
+  //         profile_handle: row.Username,
+  //         followers: parseInt(row.Followers) || 0,
+  //         views: 0, // 'Views' is not in the new Instagram header, defaulting to 0
+  //       },
+  //       content: { // Content data (for Content model)
+  //         contentType: 'post',
+  //         title: row.Caption,
+  //         mediaId: row['Image URL'],
+  //         publishedAt: publishedAt,
+  //         views: 0,
+  //         likes: parseInt(row.Likes) || 0,
+  //         comments: parseInt(row.Comments) || 0,
+  //         url: row['Image URL'],
+  //         thumbnails: {
+  //           default: row['Image URL'],
+  //           medium: row['Image URL'],
+  //           high: row['Image URL']
+  //         }
+  //       }
+  //     };
+  //   }
+  // });
 
   console.log('✅ All platform data seeded successfully!');
   process.exit(0);

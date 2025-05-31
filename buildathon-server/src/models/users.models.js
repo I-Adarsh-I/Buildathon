@@ -1,56 +1,61 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: true,
   },
+
   email: {
     type: String,
     unique: true,
-    required: true
+    required: true,
   },
 
   // Only for local signups
   password: {
     type: String,
-    default: null
+    default: null,
   },
 
   // Google OAuth-specific fields
   googleId: {
     type: String,
-    default: null
+    default: null,
   },
+
   profilePhoto: {
     type: String,
-    default: null
+    default: null,
   },
 
   interests: [String],
+
   languagePreference: {
     type: String,
-    default: 'en'
+    default: "en",
   },
+
   aiTags: [String],
+
   bio: {
     type: String,
-    default: ''
+    default: "",
   },
 
   // Role/permissions
   role: {
     type: String,
-    enum: ['user', 'creator', 'admin'],
-    default: 'user'
+    enum: ["user", "creator", "admin"],
+    default: "user",
   },
 
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;
