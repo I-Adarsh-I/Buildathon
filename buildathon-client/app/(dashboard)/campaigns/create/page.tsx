@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ChevronLeft, ChevronRight, Loader2, Hash, Upload, Search } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Hash,
+  Upload,
+  Search,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -48,16 +55,22 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
+import axios from "axios";
 
 // Define campaign schema
 const campaignSchema = z.object({
+  name: z.string().min(3, { message: "Title must be at least 3 characters" }),
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
-  objective: z.string().min(10, { message: "Objective must be at least 10 characters" }),
+  objective: z
+    .string()
+    .min(10, { message: "Objective must be at least 10 characters" }),
   budget: z.object({
     total: z.coerce.number().min(1, { message: "Budget must be at least $1" }),
     perInfluencer: z.coerce.number().optional(),
   }),
-  platforms: z.array(z.string()).min(1, { message: "Select at least one platform" }),
+  platforms: z
+    .array(z.string())
+    .min(1, { message: "Select at least one platform" }),
   hashtags: z.string().optional(),
   languagePreferences: z.array(z.string()),
   creatorCriteria: z.object({
@@ -147,16 +160,20 @@ const mockInfluencers = [
 export default function NewCampaignPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedInfluencers, setSelectedInfluencers] = useState<string[]>([]);
-  
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
   const totalSteps = 3;
-  
+  const formData = [];
+
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
+      name: "",
       title: "",
       objective: "",
       budget: {
@@ -173,7 +190,14 @@ export default function NewCampaignPage() {
       },
     },
   });
-  
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = form;
+
   const nextStep = () => {
     if (currentStep < totalSteps) {
       // Validate current step
@@ -187,7 +211,7 @@ export default function NewCampaignPage() {
         case 2:
           form.trigger(["budget.total", "platforms", "hashtags"]);
           if (
-            form.formState.errors.budget?.total || 
+            form.formState.errors.budget?.total ||
             form.formState.errors.platforms
           ) {
             return;
@@ -197,43 +221,48 @@ export default function NewCampaignPage() {
       setCurrentStep(currentStep + 1);
     }
   };
-  
+
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };
-  
-  function onSubmit(data: CampaignFormValues) {
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      console.log(data);
-      setIsSubmitting(false);
-      setShowRecommendations(true);
-    }, 1500);
-  }
-  
+
+  const onSubmit = async (data: CampaignFormValues) => {
+    setError("");
+    setSuccess("");
+    try {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_URL}/campaigns/create`, data);
+      setSuccess("Campaign created successfully!");
+      reset();
+    } catch (err: any) {
+      const message =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Something went wrong. Please try again.";
+      setError(message);
+    }
+  };
+
   const filteredInfluencers = mockInfluencers.filter(
-    (influencer) => 
+    (influencer) =>
       influencer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       influencer.handle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       influencer.niche.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
+
   const toggleInfluencer = (id: string) => {
-    setSelectedInfluencers(prev => 
-      prev.includes(id)
-        ? prev.filter(infId => infId !== id)
-        : [...prev, id]
+    setSelectedInfluencers((prev) =>
+      prev.includes(id) ? prev.filter((infId) => infId !== id) : [...prev, id]
     );
   };
-  
+
   const finalizeCampaign = () => {
     toast({
       title: "Campaign created successfully!",
-      description: `Campaign "${form.getValues("title")}" has been created with ${selectedInfluencers.length} influencers.`,
+      description: `Campaign "${form.getValues(
+        "title"
+      )}" has been created with ${selectedInfluencers.length} influencers.`,
     });
     router.push("/campaigns");
   };
@@ -242,22 +271,28 @@ export default function NewCampaignPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Create New Campaign</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Create New Campaign
+          </h1>
           <p className="text-muted-foreground">
             Set up your influencer marketing campaign
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => router.push("/campaigns")}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.push("/campaigns")}
+        >
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back to campaigns
         </Button>
       </div>
-      
+
       {/* Stepper */}
       <div className="flex justify-between">
         {Array.from({ length: totalSteps }).map((_, i) => (
           <div key={i} className="flex items-center">
-            <div 
+            <div
               className={`flex h-8 w-8 items-center justify-center rounded-full border ${
                 currentStep > i + 1
                   ? "bg-primary border-primary text-primary-foreground"
@@ -266,14 +301,10 @@ export default function NewCampaignPage() {
                   : "border-muted-foreground text-muted-foreground"
               }`}
             >
-              {currentStep > i + 1 ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                i + 1
-              )}
+              {currentStep > i + 1 ? <Check className="h-4 w-4" /> : i + 1}
             </div>
             {i < totalSteps - 1 && (
-              <div 
+              <div
                 className={`h-[2px] w-12 sm:w-24 md:w-32 ${
                   currentStep > i + 1 ? "bg-primary" : "bg-muted-foreground/30"
                 }`}
@@ -282,7 +313,7 @@ export default function NewCampaignPage() {
           </div>
         ))}
       </div>
-      
+
       {/* Form */}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -294,9 +325,12 @@ export default function NewCampaignPage() {
                 {currentStep === 3 && "Creator Criteria"}
               </CardTitle>
               <CardDescription>
-                {currentStep === 1 && "Provide basic information about your campaign"}
-                {currentStep === 2 && "Set your budget and select target platforms"}
-                {currentStep === 3 && "Define the type of creators you're looking for"}
+                {currentStep === 1 &&
+                  "Provide basic information about your campaign"}
+                {currentStep === 2 &&
+                  "Set your budget and select target platforms"}
+                {currentStep === 3 &&
+                  "Define the type of creators you're looking for"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -305,15 +339,37 @@ export default function NewCampaignPage() {
                 <>
                   <FormField
                     control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Campaign Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g., Vogue Vibe Collab"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          A clear name for your campaign
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="title"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Campaign Title</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Summer Collection Launch" {...field} />
+                          <Input
+                            placeholder="e.g., Summer Collection Launch"
+                            {...field}
+                          />
                         </FormControl>
                         <FormDescription>
-                          A clear name for your campaign
+                          A clear title for your campaign
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -326,9 +382,9 @@ export default function NewCampaignPage() {
                       <FormItem>
                         <FormLabel>Campaign Objective</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Describe what you want to achieve with this campaign" 
-                            {...field} 
+                          <Textarea
+                            placeholder="Describe what you want to achieve with this campaign"
+                            {...field}
                             className="min-h-[120px]"
                           />
                         </FormControl>
@@ -360,7 +416,7 @@ export default function NewCampaignPage() {
                   </div>
                 </>
               )}
-              
+
               {/* Step 2: Budget & Platforms */}
               {currentStep === 2 && (
                 <>
@@ -373,8 +429,14 @@ export default function NewCampaignPage() {
                           <FormLabel>Total Budget</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
-                              <Input type="number" className="pl-7" {...field} />
+                              <span className="absolute left-3 top-2.5 text-muted-foreground">
+                                $
+                              </span>
+                              <Input
+                                type="number"
+                                className="pl-7"
+                                {...field}
+                              />
                             </div>
                           </FormControl>
                           <FormDescription>
@@ -389,11 +451,19 @@ export default function NewCampaignPage() {
                       name="budget.perInfluencer"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Budget Per Influencer (Optional)</FormLabel>
+                          <FormLabel>
+                            Budget Per Influencer (Optional)
+                          </FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
-                              <Input type="number" className="pl-7" {...field} />
+                              <span className="absolute left-3 top-2.5 text-muted-foreground">
+                                $
+                              </span>
+                              <Input
+                                type="number"
+                                className="pl-7"
+                                {...field}
+                              />
                             </div>
                           </FormControl>
                           <FormDescription>
@@ -404,7 +474,7 @@ export default function NewCampaignPage() {
                       )}
                     />
                   </div>
-                  
+
                   <FormField
                     control={form.control}
                     name="platforms"
@@ -430,13 +500,19 @@ export default function NewCampaignPage() {
                                   >
                                     <FormControl>
                                       <Checkbox
-                                        checked={field.value?.includes(platform.id)}
+                                        checked={field.value?.includes(
+                                          platform.id
+                                        )}
                                         onCheckedChange={(checked) => {
                                           return checked
-                                            ? field.onChange([...field.value, platform.id])
+                                            ? field.onChange([
+                                                ...field.value,
+                                                platform.id,
+                                              ])
                                             : field.onChange(
                                                 field.value?.filter(
-                                                  (value) => value !== platform.id
+                                                  (value) =>
+                                                    value !== platform.id
                                                 )
                                               );
                                         }}
@@ -455,7 +531,7 @@ export default function NewCampaignPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="hashtags"
@@ -465,7 +541,11 @@ export default function NewCampaignPage() {
                         <FormControl>
                           <div className="relative">
                             <Hash className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input className="pl-9" placeholder="summervibes, newcollection (comma separated)" {...field} />
+                            <Input
+                              className="pl-9"
+                              placeholder="summervibes, newcollection (comma separated)"
+                              {...field}
+                            />
                           </div>
                         </FormControl>
                         <FormDescription>
@@ -475,7 +555,7 @@ export default function NewCampaignPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="languagePreferences"
@@ -496,13 +576,19 @@ export default function NewCampaignPage() {
                                   >
                                     <FormControl>
                                       <Checkbox
-                                        checked={field.value?.includes(language.id)}
+                                        checked={field.value?.includes(
+                                          language.id
+                                        )}
                                         onCheckedChange={(checked) => {
                                           return checked
-                                            ? field.onChange([...field.value, language.id])
+                                            ? field.onChange([
+                                                ...field.value,
+                                                language.id,
+                                              ])
                                             : field.onChange(
                                                 field.value?.filter(
-                                                  (value) => value !== language.id
+                                                  (value) =>
+                                                    value !== language.id
                                                 )
                                               );
                                         }}
@@ -526,7 +612,7 @@ export default function NewCampaignPage() {
                   />
                 </>
               )}
-              
+
               {/* Step 3: Creator Criteria */}
               {currentStep === 3 && (
                 <>
@@ -536,7 +622,10 @@ export default function NewCampaignPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Creator Niche</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select a niche" />
@@ -557,7 +646,7 @@ export default function NewCampaignPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <div className="grid gap-6 sm:grid-cols-2">
                     <FormField
                       control={form.control}
@@ -609,8 +698,10 @@ export default function NewCampaignPage() {
                   Next
                 </Button>
               ) : (
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button type="submit" disabled={submitting}>
+                  {submitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Create Campaign
                 </Button>
               )}
@@ -618,7 +709,7 @@ export default function NewCampaignPage() {
           </Card>
         </form>
       </Form>
-      
+
       {/* Recommendations Dialog */}
       <Dialog open={showRecommendations} onOpenChange={setShowRecommendations}>
         <DialogContent className="sm:max-w-[600px]">
@@ -628,7 +719,7 @@ export default function NewCampaignPage() {
               AI-powered recommendations based on your campaign criteria
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -640,66 +731,93 @@ export default function NewCampaignPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-2">Top Picks</h4>
               <ScrollArea className="whitespace-nowrap py-2">
                 <div className="flex space-x-4 pb-2">
                   {mockInfluencers.map((influencer) => (
-                    <div key={influencer.id} className="w-[150px] text-center space-y-2">
+                    <div
+                      key={influencer.id}
+                      className="w-[150px] text-center space-y-2"
+                    >
                       <Avatar className="h-20 w-20 mx-auto border-2 border-muted p-1">
-                        <AvatarImage src={influencer.avatar} alt={influencer.name} />
+                        <AvatarImage
+                          src={influencer.avatar}
+                          alt={influencer.name}
+                        />
                         <AvatarFallback>{influencer.name[0]}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium truncate">{influencer.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{influencer.handle}</p>
+                        <p className="font-medium truncate">
+                          {influencer.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {influencer.handle}
+                        </p>
                       </div>
-                      <Button 
-                        size="sm" 
-                        variant={selectedInfluencers.includes(influencer.id) ? "default" : "outline"}
+                      <Button
+                        size="sm"
+                        variant={
+                          selectedInfluencers.includes(influencer.id)
+                            ? "default"
+                            : "outline"
+                        }
                         className="w-full"
                         onClick={() => toggleInfluencer(influencer.id)}
                       >
-                        {selectedInfluencers.includes(influencer.id) ? "Selected" : "Select"}
+                        {selectedInfluencers.includes(influencer.id)
+                          ? "Selected"
+                          : "Select"}
                       </Button>
                     </div>
                   ))}
                 </div>
               </ScrollArea>
             </div>
-            
+
             <Separator />
-            
+
             <div className="space-y-2">
-              <h4 className="font-semibold mb-2">Personalized Search Results</h4>
+              <h4 className="font-semibold mb-2">
+                Personalized Search Results
+              </h4>
               <div className="space-y-2">
                 {filteredInfluencers.map((influencer) => (
-                  <div 
-                    key={influencer.id} 
+                  <div
+                    key={influencer.id}
                     className={`flex items-center gap-4 p-2 rounded-md ${
-                      selectedInfluencers.includes(influencer.id) 
-                        ? "bg-primary/10 border border-primary/20" 
+                      selectedInfluencers.includes(influencer.id)
+                        ? "bg-primary/10 border border-primary/20"
                         : "hover:bg-muted/50"
                     }`}
                   >
-                    <Checkbox 
+                    <Checkbox
                       id={`select-${influencer.id}`}
                       checked={selectedInfluencers.includes(influencer.id)}
                       onCheckedChange={() => toggleInfluencer(influencer.id)}
                     />
                     <Avatar>
-                      <AvatarImage src={influencer.avatar} alt={influencer.name} />
+                      <AvatarImage
+                        src={influencer.avatar}
+                        alt={influencer.name}
+                      />
                       <AvatarFallback>{influencer.name[0]}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 grid grid-cols-2 gap-2">
                       <div>
                         <p className="font-medium">{influencer.name}</p>
-                        <p className="text-xs text-muted-foreground">{influencer.handle}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {influencer.handle}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm">{influencer.followers.toLocaleString()} followers</p>
-                        <p className="text-xs text-muted-foreground">Engagement: {influencer.engagement}</p>
+                        <p className="text-sm">
+                          {influencer.followers.toLocaleString()} followers
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Engagement: {influencer.engagement}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -707,14 +825,12 @@ export default function NewCampaignPage() {
               </div>
             </div>
           </div>
-          
+
           <DialogFooter className="flex items-center justify-between">
             <div className="text-sm">
               {selectedInfluencers.length} influencers selected
             </div>
-            <Button onClick={finalizeCampaign}>
-              Finalize Campaign
-            </Button>
+            <Button onClick={finalizeCampaign}>Finalize Campaign</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
