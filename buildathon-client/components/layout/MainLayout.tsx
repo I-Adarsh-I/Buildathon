@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/theme-toggle';
+import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   LayoutDashboard,
   BarChart2,
@@ -17,10 +17,11 @@ import {
   X,
   LogOut,
   User,
-} from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { getCurrentUser } from '@/lib/auth';
+} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { getCurrentUser } from "@/lib/auth";
+import { Loader } from "../../components/Loader";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -28,47 +29,71 @@ interface MainLayoutProps {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
-  const user = getCurrentUser();
-  const isBrand = user?.role === 'brand';
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [userInfo, setUserInfo] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = await getCurrentUser();
+      console.log(currentUser);
+      setUser(currentUser);
+      setLoading(false);
+    };
+
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user_data");
+    if (storedUser) {
+      setUserInfo(JSON.parse(storedUser));
+    }
+  }, []);
+
+  if (loading) {
+    return <Loader text="Loading dashboard..." className="h-screen" />;
+  }
+  const isBrand = user?.role === "brand";
 
   const routes = [
     {
-      href: '/dashboard',
-      label: 'Dashboard',
+      href: "/dashboard",
+      label: "Dashboard",
       icon: <LayoutDashboard className="mr-2 h-4 w-4" />,
-      active: pathname === '/dashboard',
+      active: pathname === "/dashboard",
     },
     {
-      href: isBrand ? '/campaigns' : '/discover',
-      label: isBrand ? 'Campaigns' : 'Discover',
+      href: isBrand ? "/campaigns" : "/discover",
+      label: isBrand ? "Campaigns" : "Discover",
       icon: <BarChart2 className="mr-2 h-4 w-4" />,
-      active: isBrand 
-        ? pathname === '/campaigns' || pathname.startsWith('/campaigns/') 
-        : pathname === '/discover' || pathname.startsWith('/discover/'),
+      active: isBrand
+        ? pathname === "/campaigns" || pathname.startsWith("/campaigns/")
+        : pathname === "/discover" || pathname.startsWith("/discover/"),
     },
     {
-      href: '/messages',
-      label: 'Messages',
+      href: "/messages",
+      label: "Messages",
       icon: <MessageSquare className="mr-2 h-4 w-4" />,
-      active: pathname === '/messages' || pathname.startsWith('/messages/'),
+      active: pathname === "/messages" || pathname.startsWith("/messages/"),
     },
     {
-      href: isBrand ? '/payments' : '/earnings',
-      label: isBrand ? 'Payments' : 'Earnings',
+      href: isBrand ? "/payments" : "/earnings",
+      label: isBrand ? "Payments" : "Earnings",
       icon: <CircleDollarSign className="mr-2 h-4 w-4" />,
-      active: isBrand ? pathname === '/payments' : pathname === '/earnings',
+      active: isBrand ? pathname === "/payments" : pathname === "/earnings",
     },
     {
-      href: '/contracts',
-      label: 'Contracts',
+      href: "/contracts",
+      label: "Contracts",
       icon: <FileText className="mr-2 h-4 w-4" />,
-      active: pathname === '/contracts',
+      active: pathname === "/contracts",
     },
     {
-      href: '/settings',
-      label: 'Settings',
+      href: "/settings",
+      label: "Settings",
       icon: <Settings className="mr-2 h-4 w-4" />,
-      active: pathname === '/settings',
+      active: pathname === "/settings",
     },
   ];
 
@@ -79,16 +104,16 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <Link href="/dashboard" className="flex items-center cursor-pointer">
           <span className="text-xl font-bold">InfluenceAI</span>
         </Link>
-        
+
         <div className="flex items-center gap-4">
           <ThemeToggle />
           <Link href="/settings">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user?.image} />
-              <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
+              <AvatarImage src={userInfo?.profileImg} />
+              <AvatarFallback>{userInfo?.name?.charAt(0) || "U"}</AvatarFallback>
             </Avatar>
           </Link>
-          
+
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -100,12 +125,16 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 <div className="border-b p-4">
                   <div className="flex items-center gap-2 mb-4">
                     <Avatar>
-                      <AvatarImage src={user?.image} />
-                      <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
+                      <AvatarImage src={userInfo?.profileImg} />
+                      <AvatarFallback>
+                        {userInfo?.name?.charAt(0) || "U"}
+                      </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium">{user?.name}</p>
-                      <p className="text-sm text-muted-foreground">{user?.email}</p>
+                      <p className="font-medium">{userInfo?.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {userInfo?.email}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -129,7 +158,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   </div>
                 </nav>
                 <div className="border-t p-4">
-                  <Button variant="outline" className="w-full justify-start" size="sm">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    size="sm"
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </Button>
@@ -139,14 +172,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </Sheet>
         </div>
       </div>
-      
+
       {/* Desktop Navigation */}
       <div className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
         <div className="flex min-h-0 flex-1 flex-col border-r">
           <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
             <div className="flex flex-shrink-0 items-center px-4 mb-5">
-              <Link href="/dashboard" className="flex items-center cursor-pointer">
-              <span className="text-xl font-bold">InfluenceAI</span>
+              <Link
+                href="/dashboard"
+                className="flex items-center cursor-pointer"
+              >
+                <span className="text-xl font-bold">InfluenceAI</span>
               </Link>
             </div>
             <nav className="mt-5 flex-1 space-y-1 px-4">
@@ -171,11 +207,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Avatar className="h-8 w-8 mr-2">
-                  <AvatarImage src={user?.image} />
-                  <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
+                  <AvatarImage src={userInfo?.profileImg} />
+                  <AvatarFallback>
+                    {userInfo?.name?.charAt(0) || "U"}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-medium">{user?.name}</p>
+                  <p className="text-sm font-medium lg:text-[13px]">{userInfo?.name}</p>
                   <p className="text-xs text-muted-foreground">{user?.role}</p>
                 </div>
               </div>
@@ -189,7 +227,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </div>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div className="md:pl-64 pt-16 md:pt-0">
         <main className="h-full overflow-y-auto">

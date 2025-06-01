@@ -4,7 +4,7 @@ exports.googleCallback = async (req, res) => {
   try {
     if (!req.user) {
       console.log("Went inside");
-      return res.redirect('/api/v1/auth/failure');
+      return res.redirect(process.env.FAILURE_REDIRECT_ROUTE);
     }
 
     // You can now use req.user to fetch details
@@ -41,13 +41,15 @@ exports.googleCallback = async (req, res) => {
     req.session.user = {
       id: user._id,
       name: user.name,
-      email: user.email
+      email: user.email,
+      profileImg: user.profilePhoto
     };
+    // console.log("Data", req.session.user);
     
-    return res.redirect('/api/v1/auth/success');
+    return res.redirect(process.env.SUCCESS_REDIRECT_ROUTE);
   } catch (error) {
     console.error('Google login error:', error);
-    return res.redirect('/api/v1/auth/failure');
+    return res.redirect(process.env.FAILURE_REDIRECT_ROUTE);
   }
 };
 

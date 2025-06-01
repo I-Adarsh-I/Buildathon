@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -59,19 +59,16 @@ export default function LoginPage() {
         credentials: "include", // important for session cookies
         body: JSON.stringify(data),
       });
-
       const result = await res.json();
-
+      console.log(result);
       if (!res.ok) {
         throw new Error(result.message || "Login failed");
       }
-
       toast({
         title: "Login successful",
         description: `Welcome back, ${result.user?.name || "user"}!`,
       });
-
-      router.push("/dashboard");
+      // router.push("/dashboard");
     } catch (err: any) {
       toast({
         title: "Login failed",
@@ -83,10 +80,77 @@ export default function LoginPage() {
     }
   }
 
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      setIsLoading(true); // Indicate loading while checking session
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/auth/success`, {
+          credentials: "include", // Essential for sending session cookie
+        });
+        const data = await res.json();
+        // console.log("Auth status check response:", data);
+        localStorage.setItem("user_data", JSON.stringify(data.user))
+
+        if (res.ok && data.success) {
+          setUser(data.user);
+          toast({
+            title: "Login successful",
+            description: `Welcome back, ${data.user?.name || "user"}!`, // Use the imported icon
+          });
+          // Redirect to dashboard on successful login
+          router.push("/dashboard");
+        } else {
+          // If not successful or no active session, clear user or handle failure
+          setUser(null);
+          // Only show toast if it's explicitly a failure from the backend,
+          // not just no active session (which is normal if user just landed on login page)
+          if (data.message && data.message !== 'No active session') {
+             toast({
+                title: "Authentication Failed",
+                description: data.message,
+                variant: "destructive",
+             });
+          }
+        }
+      } catch (err) {
+        console.error("Error checking auth status:", err);
+        setUser(null);
+        toast({
+          title: "Network Error",
+          description: "Could not connect to authentication service.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // If the URL contains /api/v1/auth/success or /api/v1/auth/failure
+    // it means we've just been redirected from the OAuth flow.
+    // In Next.js, you might have dedicated pages for success/failure,
+    // but if this login page is where it redirects, this check is vital.
+    // A simpler way: just run this on component mount to check any existing session.
+    checkAuthStatus();
+
+  }, [router]); // Depend on router to ensure it's available
+
+  // useEffect(() => {
+  //   fetch("http://localhost:3000/api/v1/auth/success", {
+  //     credentials: "include",
+  //   })
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       console.log(data);
+  //       if (data.success) {
+  //         setUser(data.user);
+  //       }
+  //     });
+  // }, []);
+
   function handleGoogleLogin() {
     setIsLoading(true);
-
-    // This redirects to your Express Google OAuth route
     window.location.href = "http://localhost:3000/api/v1/auth/google";
   }
 
