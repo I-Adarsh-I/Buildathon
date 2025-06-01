@@ -25,6 +25,7 @@ const influencerSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true, unique: true },
     contact_email: { type: String, trim: true, lowercase: true, sparse: true },
     bio: { type: String },
+    profile_image: { type: String, default: null },
 
     youtube: youtubePlatformSchema,
     instagram: instagramPlatformSchema,

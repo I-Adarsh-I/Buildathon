@@ -127,11 +127,6 @@ export default function LoginPage() {
       }
     };
 
-    // If the URL contains /api/v1/auth/success or /api/v1/auth/failure
-    // it means we've just been redirected from the OAuth flow.
-    // In Next.js, you might have dedicated pages for success/failure,
-    // but if this login page is where it redirects, this check is vital.
-    // A simpler way: just run this on component mount to check any existing session.
     checkAuthStatus();
 
   }, [router]); // Depend on router to ensure it's available
@@ -150,6 +145,7 @@ export default function LoginPage() {
   // }, []);
 
   function handleGoogleLogin() {
+    console.log("Handeling redirection");
     setIsLoading(true);
     window.location.href = "http://localhost:3000/api/v1/auth/google";
   }
@@ -223,7 +219,7 @@ export default function LoginPage() {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={handleGoogleLogin}
+                onClick={() => handleGoogleLogin()}
                 disabled={isLoading}
               >
                 {isLoading ? "Logging in..." : "Continue with Google"}

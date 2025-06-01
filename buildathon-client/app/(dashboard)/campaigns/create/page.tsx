@@ -228,19 +228,43 @@ export default function NewCampaignPage() {
     }
   };
 
-  const onSubmit = async (data: CampaignFormValues) => {
-    setError("");
-    setSuccess("");
+  const onSubmit = async (values: CampaignFormValues) => {
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_URL}/campaigns/create`, data);
-      setSuccess("Campaign created successfully!");
-      reset();
-    } catch (err: any) {
-      const message =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        "Something went wrong. Please try again.";
-      setError(message);
+      const formData = new FormData();
+
+      formData.append("name", values.name);
+      formData.append("title", values.title);
+      formData.append("objective", values.objective);
+      formData.append("hashtags", values.hashtags || "");
+
+      formData.append("budget", JSON.stringify(values.budget));
+      formData.append("platforms", JSON.stringify(values.platforms));
+      formData.append(
+        "languagePreferences",
+        JSON.stringify(values.languagePreferences)
+      );
+      formData.append(
+        "creatorCriteria",
+        JSON.stringify(values.creatorCriteria)
+      );
+
+      const formDataEntries = Array.from(formData.entries());
+      for (let i = 0; i < formDataEntries.length; i++) {
+        const pair = formDataEntries[i];
+        console.log(pair[0] + ": " + pair[1]);
+      }
+
+      const resp = await axios.post(
+        `${process.env.NEXT_PUBLIC_URL}/campaigns/create`,
+        formData,
+        {
+          withCredentials: true
+        }
+      )
+
+      console.log("logging api resp: ", resp);
+    } catch (err) {
+      console.error("Error creating campaign:", error);
     }
   };
 
