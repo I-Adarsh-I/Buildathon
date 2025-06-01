@@ -7,12 +7,13 @@ import { ActivityFeed } from '@/components/dashboard/activity-feed';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CampaignCard } from '@/components/campaigns/campaign-card';
 import NewCampaignDialog from '../components/campaignDialog';
 import CampaignDialogStepper from '../components/campaignDialog';
+import axios from 'axios';
 
 // Sample data for the activity feed
 const recentActivities = [
@@ -67,7 +68,31 @@ const recentActivities = [
 
 export default function Dashboard() {
   const userRole = getUserRole();
-  const isBrand = userRole === 'brand';
+  const isBrand = userRole === 'user';
+  let no_of_campaigns;
+
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_URL}/campaigns/all`,
+          {
+            withCredentials: true, // 👈 Needed for cookie-based auth
+            // headers: { Authorization: `Bearer ${token}` } // 👈 Uncomment for JWT
+          }
+        );
+        const campaigns = res.data;
+        const keyExists = localStorage.getItem("no_of_campaigns");
+        if (keyExists === null) {
+          localStorage.setItem("no_of_campaigns", campaigns.length);
+        }
+      } catch (error) {
+        console.error("Error fetching campaigns:", error);
+      }
+    };
+
+    fetchCampaigns();
+  }, []);
 
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
@@ -90,13 +115,15 @@ export default function Dashboard() {
     }
   });
 
+  no_of_campaigns = localStorage.getItem("no_of_campaigns")
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back to your {isBrand ? 'brand' : 'creator'} dashboard.
+            Welcome back to your {isBrand ? 'User' : 'creator'} dashboard.
           </p>
         </div>
         
@@ -111,12 +138,12 @@ export default function Dashboard() {
         )}
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className={`grid gap-4 md:grid-cols-2 lg:${ isBrand ? "grid-cols-3" : "grid-cols-4" }`}>
         {isBrand ? (
           <>
             <OverviewCard
               title="Total Campaigns"
-              value="3"
+              value={`${no_of_campaigns}`}
               description="2 active, 1 draft"
               icon={<BarChart2 className="h-4 w-4" />}
               variant="blue"

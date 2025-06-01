@@ -1,5 +1,5 @@
 // User types
-export type UserRole = 'brand' | 'creator' | 'admin';
+export type UserRole = "user" | "creator" | "admin";
 
 export interface User {
   id: string;
@@ -19,38 +19,36 @@ export interface User {
 }
 
 // Campaign types
-export type CampaignStatus = 'draft' | 'active' | 'completed' | 'cancelled';
-export type Platform = 'instagram' | 'youtube' | 'tiktok' | 'twitter';
-export type DeliverableType = 'post' | 'story' | 'reel' | 'video' | 'tweet';
+export type CampaignStatus = "draft" | "active" | "completed" | "cancelled";
+export type Platform = "instagram" | "youtube" | "tiktok" | "twitter";
+export type DeliverableType = "post" | "story" | "reel" | "video" | "tweet";
 
 export interface Campaign {
-  id: string;
-  brandId: string;
-  name: string;
-  description: string;
-  goal: string;
-  budget: number;
-  startDate: string;
-  endDate: string;
-  platforms: Platform[];
-  deliverables: {
-    type: DeliverableType;
-    count: number;
-    description?: string;
-  }[];
-  targetAudience: {
-    ageRange?: [number, number];
-    demographics?: string[];
-    interests?: string[];
-    locations?: string[];
+  _id: string; // Mongoose-generated ObjectId (stringified)
+  title: string; // corresponds to name/title
+  objective: string;
+  images: string[];
+  budget: {
+    total: number;
+    perInfluencer?: number;
   };
-  status: CampaignStatus;
-  createdAt: string;
-  updatedAt: string;
+  platforms: string[];
+  hashtags: string[];
+  languagePreferences: string[];
+  creatorCriteria: {
+    niche?: string;
+    minFollowers?: number;
+    maxFollowers?: number;
+  };
+  createdAt: string; // ISO date string
 }
 
 // Application types
-export type ApplicationStatus = 'pending' | 'approved' | 'rejected' | 'completed';
+export type ApplicationStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "completed";
 
 export interface Application {
   id: string;
@@ -62,7 +60,7 @@ export interface Application {
     type: DeliverableType;
     content: string;
     submittedAt: string;
-    status: 'pending' | 'approved' | 'rejected';
+    status: "pending" | "approved" | "rejected";
   }[];
   createdAt: string;
   updatedAt: string;
@@ -80,7 +78,7 @@ export interface Message {
 }
 
 // Contract and payment types
-export type PaymentStatus = 'pending' | 'completed' | 'failed';
+export type PaymentStatus = "pending" | "completed" | "failed";
 
 export interface Payment {
   id: string;
