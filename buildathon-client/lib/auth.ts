@@ -16,7 +16,7 @@ export function isAuthenticated(): boolean {
   return false;
 }
 
-export function getUserRole(): 'brand' | 'creator' | null {
+export function getUserRole(): 'user' | 'admin' | 'creator' | null {
   const user = getCurrentUser();
   return user ? user.role : null;
 }

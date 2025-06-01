@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import Link from "next/link";
 import { Plus, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,19 +14,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { campaigns } from "@/lib/placeholder-data";
+import { Campaign } from "@/lib/types";
+// import { campaigns } from "@/lib/placeholder-data";
 
 export default function CampaignsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_URL}/campaigns/all`,
+          {
+            withCredentials: true, // 👈 Needed for cookie-based auth
+            // headers: { Authorization: `Bearer ${token}` } // 👈 Uncomment for JWT
+          }
+        );
+        const key_exists = localStorage.getItem("no_of_campaigns")
+        if (key_exists == null) {
+          localStorage.setItem("no_of_campaigns", res.data.length())
+        }
+        setCampaigns(res.data);
+      } catch (error) {
+        console.error("Error fetching campaigns:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCampaigns();
+  }, []);
+
+  if (loading) return <p className="p-4">Loading campaigns...</p>;
 
   // Filter campaigns based on search query and status filter
   const filteredCampaigns = campaigns.filter((campaign) => {
     const matchesSearch =
-      campaign.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      campaign.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || campaign.status === statusFilter;
+      campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      campaign.objective.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "all";
 
     return matchesSearch && matchesStatus;
   });
@@ -91,9 +121,9 @@ export default function CampaignsPage() {
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredCampaigns.map((campaign) => (
+          {campaigns.map((campaign) => (
             <CampaignCard
-              key={campaign.id}
+              key={campaign._id}
               campaign={campaign}
               viewType="brand"
             />
