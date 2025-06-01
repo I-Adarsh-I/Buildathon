@@ -32,10 +32,10 @@ exports.createCampaign = async (req, res, next) => {
       return res.status(400).json({ message: "Missing required form fields." });
     }
 
-    const parsedBudget = JSON.parse(budget);
-    const parsedPlatforms = JSON.parse(platforms);
-    const parsedLanguagePreferences = JSON.parse(languagePreferences);
-    const parsedCreatorCriteria = JSON.parse(creatorCriteria);
+    const parsedBudget = typeof budget === 'string' ? JSON.parse(budget) : budget;
+    const parsedPlatforms = typeof platforms === 'string' ? JSON.parse(platforms) : platforms;
+    const parsedLanguagePreferences = typeof languagePreferences === 'string' ? JSON.parse(languagePreferences) : languagePreferences;
+    const parsedCreatorCriteria = typeof creatorCriteria === 'string' ? JSON.parse(creatorCriteria) : creatorCriteria;
 
     const campaignData = {
       name,
