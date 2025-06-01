@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const campaignSchema = new mongoose.Schema({
+  name: { type: String, required: true},
   title: { type: String, required: true }, // Campaign name
   objective: { type: String, required: true },
   images: [ String ],
