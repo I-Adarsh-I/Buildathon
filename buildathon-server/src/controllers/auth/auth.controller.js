@@ -8,13 +8,15 @@ exports.googleCallback = async (req, res) => {
     }
 
     // You can now use req.user to fetch details
-    const { id, name, email, profilePhoto } = req.user;
+    const { googleId, name, email, profilePhoto } = req.user;
+
+    console.log("logging google id", req.user);
 
     // const email = emails?.[0]?.value;
     // const profilePhoto = photos?.[0]?.value;
 
     // Check if user already exists
-    let user = await User.findOne({ googleId: id });
+    let user = await User.findOne({ googleId: googleId });
 
     if (!user) {
       // Check by email in case user already signed up manually
@@ -22,7 +24,7 @@ exports.googleCallback = async (req, res) => {
 
       if (user) {
         // Link Google ID if account exists with same email
-        user.googleId = id;
+        user.googleId = googleId;
         user.profilePhoto = profilePhoto || user.profilePhoto;
         await user.save();
       } else {
@@ -30,7 +32,7 @@ exports.googleCallback = async (req, res) => {
         user = await User.create({
           name: name,
           email: email,
-          googleId: id,
+          googleId: googleId,
           profilePhoto
         });
       }

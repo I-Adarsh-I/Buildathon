@@ -74,7 +74,7 @@ async function seedInstagramData() {
                   publishedAt: publishedAt, // Use the validated date from 'Post Time'
                   views: 0, // No direct 'views' for content in this CSV, defaulting to 0
                   likes: parseInt(row['Total Likes']) || 0, // Mapped to 'Total Likes'
-                  comments: 0, // No single 'comments' count, only individual top comments, defaulting to 0
+                  comments: parseInt(row['comments_counts']) || 0, // No single 'comments' count, only individual top comments, defaulting to 0
                   url: row['Post URL'], // Mapped to 'Post URL'
                   thumbnails: {
                     default: row['Image URL'], // Mapped to 'Image URL'

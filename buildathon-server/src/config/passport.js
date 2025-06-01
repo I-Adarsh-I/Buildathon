@@ -39,30 +39,65 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      callbackURL: '/api/v1/auth/google/callback',
+      scope: ['profile', 'email'],
     },
-    async(accessToken, refreshToken, profile, done) => {
-      // console.log("Google Profile:", profile);
-      // return done(null, profile);
+    async (accessToken, refreshToken, profile, done) => {
       try {
-        const existingUser = await User.findOne({ googleId: profile.id });
+        console.log("user profile", profile)
+        const googleId = profile.id;
+        const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null;
+        const displayName = profile.displayName;
+        const profilePhoto = profile.photos && profile.photos[0] ? profile.photos[0].value : null;
 
-        if (existingUser) {
-          // If user exists, pass the Mongoose document to done
-          return done(null, existingUser); // <--- Make sure you return 'existingUser' here
-        } else {
-          // If new user, create it and then pass the *created Mongoose document* to done
-          const newUser = await User.create({
-            googleId: profile.id,
-            name: profile.displayName,
-            email: profile.emails[0].value,
-            profilePhoto: profile.photos[0].value,
-            // Add other fields you need for a new user
-          });
-          return done(null, newUser); // <--- Make sure you return 'newUser' here
+        let user = null;
+
+        user = await User.findOne({ googleId: googleId });
+
+        if (user) {
+          if (user.profilePhoto !== profilePhoto || user.name !== displayName) {
+              user.profilePhoto = profilePhoto || user.profilePhoto;
+              user.name = displayName || user.name;
+              user.googleId = googleId
+              await user.save();
+          }
+          return done(null, user);
         }
+
+        if (email) {
+            user = await User.findOne({ email: email });
+
+            console.log("logging user: ", user)
+
+            if (user) {
+                if (!user.googleId) {
+                    user.googleId = googleId;
+                    user.profilePhoto = profilePhoto || user.profilePhoto;
+                    await user.save(); // Save the updated user with googleId
+                    return done(null, user); // Authenticate with this now-linked user
+                } else {
+                     console.warn(`User with email ${email} found, but existing googleId ${user.googleId} differs from new Google ID ${googleId}. Proceeding with existing user.`);
+                     return done(null, user);
+                }
+            }
+        }
+
+        if (!displayName || !email) {
+            return done(new Error("Google profile missing required 'name' or 'email'"), null);
+        }
+
+        user = await User.create({
+          googleId: googleId,
+          name: displayName,
+          email: email, // This is guaranteed to be present due to the check above
+          profilePhoto: profilePhoto,
+        });
+
+        return done(null, user); // Authenticate with the newly created user
+
       } catch (error) {
-        // If an error occurs, pass the error to done
+        console.error('Google Strategy error:', error);
+        // Pass the error to Passport, it will handle failure.
         return done(error, null);
       }
     }
