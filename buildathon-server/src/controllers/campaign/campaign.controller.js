@@ -1,8 +1,24 @@
 const Campaign = require("../../models/campaign.model");
+const Influencer = require("../../models/influencer.model");
+const Notification = require("../../models/notification.model");
 
 exports.createCampaign = async (req, res, next) => {
   try {
     const campaign = await Campaign.create(req.body);
+
+    const globalNotification = await Notification.create({
+      brand: req.body.name,
+      sender: req.user ? req.user._id : null,
+      type: "campaign_created",
+      message: `📢 New Campaign Alert! "${campaign.title}" is now open for applications.`,
+      link: `/campaigns/${campaign._id}`,
+      relatedEntity: {
+        id: campaign._id,
+        type: "Campaign",
+      },
+      campaign: campaign._id,
+    });
+
     return res.status(201).json({ message: "Campaign created", campaign });
   } catch (err) {
     console.error(err);
