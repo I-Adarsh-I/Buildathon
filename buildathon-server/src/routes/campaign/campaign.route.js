@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 
 const campaignController = require('../../controllers/campaign/campaign.controller');
 const isAuthenticatd = require("../../middlewares/isAuthenticated");
 const authorizeRoles = require("../../middlewares/authorizeRole");
 
-router.post('/create', isAuthenticatd, authorizeRoles("admin", "user"), campaignController.createCampaign);
+const upload = multer();
+
+router.post('/create', isAuthenticatd, authorizeRoles("admin", "user"), upload.none(), campaignController.createCampaign);
 
 router.get('/all', isAuthenticatd, campaignController.getAllCampaigns);
 
