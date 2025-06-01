@@ -4,9 +4,54 @@ const Notification = require("../../models/notification.model");
 
 exports.createCampaign = async (req, res, next) => {
   try {
-    const campaign = await Campaign.create(req.body);
+    console.log("req.body after Multer:", req.body);
 
-    const globalNotification = await Notification.create({
+    const {
+      name,
+      title,
+      objective,
+      hashtags,
+      budget,
+      platforms,
+      languagePreferences,
+      creatorCriteria,
+    } = req.body;
+
+    if (
+      !name ||
+      !title ||
+      !objective ||
+      !budget ||
+      !platforms ||
+      !languagePreferences ||
+      !creatorCriteria
+    ) {
+      console.error(
+        "Missing expected fields in req.body. Multer might not be configured correctly, or frontend is not sending all data."
+      );
+      return res.status(400).json({ message: "Missing required form fields." });
+    }
+
+    const parsedBudget = JSON.parse(budget);
+    const parsedPlatforms = JSON.parse(platforms);
+    const parsedLanguagePreferences = JSON.parse(languagePreferences);
+    const parsedCreatorCriteria = JSON.parse(creatorCriteria);
+
+    const campaignData = {
+      name,
+      title,
+      objective,
+      budget: parsedBudget,
+      platforms: parsedPlatforms,
+      hashtags: hashtags || "",
+      languagePreferences: parsedLanguagePreferences,
+      creatorCriteria: parsedCreatorCriteria,
+      // creator: req.user ? req.user._id : null,
+    };
+
+    const campaign = await Campaign.create(campaignData);
+
+    await Notification.create({
       brand: req.body.name,
       sender: req.user ? req.user._id : null,
       type: "campaign_created",
