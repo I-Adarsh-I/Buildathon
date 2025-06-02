@@ -6,8 +6,10 @@ const isAuthenticated = require('../../middlewares/isAuthenticated')
 
 router.post('/create', userController.createUser);
 
-router.get('/me', isAuthenticated, userController.getCurrentUser);
+router.get('/me', userController.getCurrentUser);
 
-router.patch('/update', isAuthenticated, userController.updateUser);
+router.patch('/update',  userController.updateUser);
 
 module.exports = router;
+
+// isAuthenticated,

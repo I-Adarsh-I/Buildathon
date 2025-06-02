@@ -4,16 +4,16 @@ const aiMatcherService = require('../../services/aiMatcher.service');
 
 exports.getMatchedInfluencers = async (req, res, next) => {
     try {
-        const { hashtags, platforms, niche } = req.body;
+        const { title, description, budget } = req.body;
 
-        if (!hashtags || !niche) {
+        if (!title) {
             return res.status(400).json({ success: false, message: "Hashtags and niche are required for AI matching." });
         }
 
         const criteriaToSearchInfluencersBy = {
-            hashtags,
-            platforms,
-            niche
+            title,
+            description,
+            budget,
         }
         const matchedInfluencerIds = await aiMatcherService.matchInfluencers(criteriaToSearchInfluencersBy);
 

@@ -8,14 +8,23 @@ const authorizeRoles = require("../../middlewares/authorizeRole");
 
 const upload = multer();
 
-router.post('/create', isAuthenticatd, authorizeRoles("admin", "user"), upload.none(), campaignController.createCampaign);
+router.post('/create',  upload.none(), campaignController.createCampaign);
 
-router.get('/all', isAuthenticatd, campaignController.getAllCampaigns);
+router.get('/all', campaignController.getAllCampaigns);
 
-router.get('/campaign/:id', isAuthenticatd, campaignController.getCampaignById);
+router.get('/campaign/:id', campaignController.getCampaignById);
 
-router.patch('/campaign/:id', isAuthenticatd, authorizeRoles('admin', 'user'), campaignController.updateCampaign);
+router.patch('/campaign/:id', campaignController.updateCampaign);
 
-router.delete('/campaign/:id', isAuthenticatd, authorizeRoles('admin', 'user'), campaignController.deleteCampaign);
+router.delete('/campaign/:id', campaignController.deleteCampaign);
 
 module.exports = router;
+
+// , authorizeRoles("admin", "user"),
+// , authorizeRoles('admin', 'user'),
+// , authorizeRoles('admin', 'user'),
+// isAuthenticatd,
+// isAuthenticatd,
+// isAuthenticatd,
+// isAuthenticatd,
+// isAuthenticatd,

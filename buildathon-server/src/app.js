@@ -30,9 +30,10 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: process.env.NODE_ENV === "development",
+      secure: true,
+      // secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: "none",
       maxAge: 1000 * 60 * 60 * 24,
     },
     store: MongoStore.create({
@@ -45,7 +46,13 @@ app.use(
 
 app.get('/', (req,res) => {
   res.status(200).json({message: "Working"})
-})
+});
+
+app.use((req, res, next) => {
+  console.log("Cookies:", req.cookies);
+  console.log("Session:", req.session);
+  next();
+});
 
 app.use(passport.initialize());
 app.use(passport.session());
