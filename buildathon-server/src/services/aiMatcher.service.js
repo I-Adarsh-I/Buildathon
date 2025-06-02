@@ -63,24 +63,24 @@ exports.matchInfluencers = async (criteriaToSearchInfluencersBy) => {
     console.log("Sending criteria to AI:", criteriaToSearchInfluencersBy);
 
     // Construct the payload to be sent to the AI service.
-    const aiRequestPayload = {
-      prompt: `You are Jessica, an outbound price negotiator for an advertiser. You are calling to negotiate price for product promotion to the content creator. Be friendly and professional and answer all questions. Do not reveal budget (try not to exceed the budget). Product => ${criteriaToSearchInfluencersBy.title}, ${criteriaToSearchInfluencersBy.description} - ${criteriaToSearchInfluencersBy.budget}`,
-      first_message:
-        "Hello Creator, my name is Jessica, Is this good time to talk regarding product promotion?",
-      number: "+918318396827",
-    };
+    // const aiRequestPayload = {
+    //   prompt: `You are Jessica, an outbound price negotiator for an advertiser. You are calling to negotiate price for product promotion to the content creator. Be friendly and professional and answer all questions. Do not reveal budget (try not to exceed the budget). Product => ${criteriaToSearchInfluencersBy.title}, ${criteriaToSearchInfluencersBy.description} - ${criteriaToSearchInfluencersBy.budget}`,
+    //   first_message:
+    //     "Hello Creator, my name is Jessica, Is this good time to talk regarding product promotion?",
+    //   number: "+918318396827",
+    // };
 
-    const response = await axios.post(AI_MATCHER_API_URL, aiRequestPayload, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: AI_MATCHER_API_KEY
-          ? `Bearer ${AI_MATCHER_API_KEY}`
-          : undefined,
-      },
-    });
+    // const response = await axios.post(AI_MATCHER_API_URL, aiRequestPayload, {
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: AI_MATCHER_API_KEY
+    //       ? `Bearer ${AI_MATCHER_API_KEY}`
+    //       : undefined,
+    //   },
+    // });
 
-    const data = response.data;
-    console.log("AI Matcher API response:", data);
+    // const data = response.data;
+    // console.log("AI Matcher API response:", data);
 
     const mockInfluencerIds = [
         '683b4a423e772afa0dc1c59a',
