@@ -279,37 +279,42 @@ export default function NewCampaignPage() {
       // Example: If the second API needs the ID of the newly created campaign
       const secondApiData = {
         title: campaignDetails.campaign.title,
+        description: campaignDetails.campaign.objective,
+        budget: campaignDetails.campaign.budget.perInfluencer,
       };
 
-      console.log("Butterfly", secondApiData);
+      localStorage.setItem("CallAPI", JSON.stringify(secondApiData));
 
-      try {
-        const secondResp = await axios.post(
-          "https://7d32-103-253-173-168.ngrok-free.app/api/v1/ai/influencer-match", // <--- REPLACE with your actual second API route
-          secondApiData,
-          {
-            withCredentials: true,
-            headers: {
-              "ngrok-skip-browser-warning": "true", // Add this header
-            },
-          }
-        );
-        console.log("Secondary API response: ", secondResp.data);
-        toast({
-          title: "Secondary Action Complete",
-          description: "Additional processes finished successfully.",
-        });
-      } catch (secondApiErr: any) {
-        console.error("Error during secondary API call:", secondApiErr);
-        // You might want to show a partial success message or a warning toast here
-        toast({
-          title: "Campaign Created (with warning)",
-          description:
-            "Campaign was created, but a secondary action failed. Please check console.",
-          variant: "destructive",
-        });
-        // Do NOT set global error, as the primary action was successful
-      }
+      // console.log("Butterfly", secondApiData);
+
+      // try {
+      //   const secondResp = await axios.post(
+      //     "https://7d32-103-253-173-168.ngrok-free.app/api/v1/ai/influencer-match", // <--- REPLACE with your actual second API route
+      //     secondApiData,
+      //     {
+      //       withCredentials: true,
+      //       headers: {
+      //         "ngrok-skip-browser-warning": "true", // Add this header
+      //       },
+      //     }
+      //   );
+      //   console.log("Secondary API response: ", secondResp.data);
+      router.push("/toppicks");
+      //   toast({
+      //     title: "Secondary Action Complete",
+      //     description: "Additional processes finished successfully.",
+      //   });
+      // } catch (secondApiErr: any) {
+      //   console.error("Error during secondary API call:", secondApiErr);
+      //   // You might want to show a partial success message or a warning toast here
+      //   toast({
+      //     title: "Campaign Created (with warning)",
+      //     description:
+      //       "Campaign was created, but a secondary action failed. Please check console.",
+      //     variant: "destructive",
+      //   });
+      //   // Do NOT set global error, as the primary action was successful
+      // }
 
       reset(); // Reset the form fields
       setFiles([]); // Clear selected files from dropzone
