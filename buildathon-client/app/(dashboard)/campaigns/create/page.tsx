@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -41,21 +41,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
 import axios from "axios";
+import { useDropzone } from "react-dropzone";
 
 // Define campaign schema
 const campaignSchema = z.object({
@@ -109,54 +97,6 @@ const niches = [
   { id: "lifestyle", label: "Lifestyle" },
 ];
 
-const mockInfluencers = [
-  {
-    id: "inf1",
-    name: "Alex Morgan",
-    handle: "@alexmorgan",
-    avatar: "https://i.pravatar.cc/150?img=1",
-    niche: "Beauty & Lifestyle",
-    followers: 125000,
-    engagement: "4.8%",
-  },
-  {
-    id: "inf2",
-    name: "James Wilson",
-    handle: "@jameswilson",
-    avatar: "https://i.pravatar.cc/150?img=2",
-    niche: "Tech Reviews",
-    followers: 85000,
-    engagement: "5.2%",
-  },
-  {
-    id: "inf3",
-    name: "Emma Chen",
-    handle: "@emmachen",
-    avatar: "https://i.pravatar.cc/150?img=3",
-    niche: "Fashion",
-    followers: 220000,
-    engagement: "3.9%",
-  },
-  {
-    id: "inf4",
-    name: "Carlos Rodriguez",
-    handle: "@carlosrodriguez",
-    avatar: "https://i.pravatar.cc/150?img=4",
-    niche: "Fitness",
-    followers: 175000,
-    engagement: "6.1%",
-  },
-  {
-    id: "inf5",
-    name: "Priya Sharma",
-    handle: "@priyasharma",
-    avatar: "https://i.pravatar.cc/150?img=5",
-    niche: "Food & Travel",
-    followers: 310000,
-    engagement: "4.2%",
-  },
-];
-
 export default function NewCampaignPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -166,6 +106,7 @@ export default function NewCampaignPage() {
   const [selectedInfluencers, setSelectedInfluencers] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
 
   const totalSteps = 3;
   const formData = [];
@@ -222,13 +163,74 @@ export default function NewCampaignPage() {
     }
   };
 
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: { "image/png": [".png"], "image/jpeg": [".jpg", ".jpeg"] },
+    maxSize: 5 * 1024 * 1024, // 5MB
+    onDrop: (acceptedFiles) => {
+      setFiles(acceptedFiles);
+      toast({
+        title: "Files Uploaded",
+        description: `${acceptedFiles.length} file(s) selected`,
+      });
+    },
+  });
+
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };
 
+  // const onSubmit = async (values: CampaignFormValues) => {
+  //   setSubmitting(true); // Indicate submission is in progress
+  //   setError(""); // Clear any previous errors
+  //   try {
+  //     const formData = new FormData();
+
+  //     formData.append("name", values.name);
+  //     formData.append("title", values.title);
+  //     formData.append("objective", values.objective);
+  //     formData.append("hashtags", values.hashtags || "");
+
+  //     formData.append("budget", JSON.stringify(values.budget));
+  //     formData.append("platforms", JSON.stringify(values.platforms));
+  //     formData.append(
+  //       "languagePreferences",
+  //       JSON.stringify(values.languagePreferences)
+  //     );
+  //     formData.append(
+  //       "creatorCriteria",
+  //       JSON.stringify(values.creatorCriteria)
+  //     );
+
+  //     // Append uploaded files to FormData
+  //     files.forEach((file) => {
+  //       formData.append("images", file); // Assuming your API expects 'images'
+  //     });
+
+  //     const resp = await axios.post(
+  //       `${process.env.NEXT_PUBLIC_URL}/campaigns/create`,
+  //       formData,
+  //       {
+  //         withCredentials: true,
+  //       }
+  //     );
+
+  //     console.log("logging api resp: ", resp);
+  //     setSuccess("Campaign created successfully!"); // Display success message
+  //     reset(); // Reset the form
+  //   } catch (err: any) {
+  //     // Use 'any' or a more specific type
+  //     console.error("Error creating campaign:", err);
+  //     setError(err.message || "An error occurred while creating the campaign."); // Display error message
+  //   } finally {
+  //     setSubmitting(false); // Indicate submission is complete
+  //   }
+  // };
+
   const onSubmit = async (values: CampaignFormValues) => {
+    setSubmitting(true);
+    setError("");
     try {
       const formData = new FormData();
 
@@ -248,33 +250,81 @@ export default function NewCampaignPage() {
         JSON.stringify(values.creatorCriteria)
       );
 
-      const formDataEntries = Array.from(formData.entries());
-      for (let i = 0; i < formDataEntries.length; i++) {
-        const pair = formDataEntries[i];
-        console.log(pair[0] + ": " + pair[1]);
-      }
+      // Append uploaded files to FormData
+      files.forEach((file) => {
+        formData.append("images", file); // Assuming your API expects 'images'
+      });
 
-      const resp = await axios.post(
+      // --- First API Call: Create Campaign ---
+      const campaignResp = await axios.post(
         `${process.env.NEXT_PUBLIC_URL}/campaigns/create`,
         formData,
         {
-          withCredentials: true
+          withCredentials: true,
         }
-      )
+      );
 
-      console.log("logging api resp: ", resp);
-    } catch (err) {
-      console.error("Error creating campaign:", error);
+      console.log("Campaign creation API response: ", campaignResp.data);
+      const campaignDetails = campaignResp.data
+      toast({
+        title: "Campaign Created!",
+        description: "Your campaign has been successfully launched.",
+      });
+      setSuccess("Campaign created successfully!");
+
+      // --- Second API Call (After first one completes successfully) ---
+      // Example: If the second API needs the ID of the newly created campaign
+      const secondApiData = {
+        hashtags: campaignDetails.hashtags || "",
+        platforms: campaignDetails.platform,
+        niche: "Trimmer",
+        // ... any other data required by the second API
+      };
+
+      try {
+        const secondResp = await axios.post(
+          "https://7063-103-253-173-168.ngrok-free.app/api/v1/ai/influencer-match", // <--- REPLACE with your actual second API route
+          secondApiData,
+          {
+            withCredentials: true,
+          }
+        );
+        console.log("Secondary API response: ", secondResp.data);
+        toast({
+          title: "Secondary Action Complete",
+          description: "Additional processes finished successfully.",
+        });
+      } catch (secondApiErr: any) {
+        console.error("Error during secondary API call:", secondApiErr);
+        // You might want to show a partial success message or a warning toast here
+        toast({
+          title: "Campaign Created (with warning)",
+          description:
+            "Campaign was created, but a secondary action failed. Please check console.",
+          variant: "destructive",
+        });
+        // Do NOT set global error, as the primary action was successful
+      }
+
+      reset(); // Reset the form fields
+      setFiles([]); // Clear selected files from dropzone
+    } catch (err: any) {
+      // This catch block handles errors from the *first* API call
+      console.error("Error creating campaign:", err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "An error occurred during campaign creation."
+      );
+      toast({
+        title: "Campaign Creation Failed",
+        description: err.response?.data?.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
-
-  const filteredInfluencers = mockInfluencers.filter(
-    (influencer) =>
-      influencer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      influencer.handle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      influencer.niche.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const toggleInfluencer = (id: string) => {
     setSelectedInfluencers((prev) =>
       prev.includes(id) ? prev.filter((infId) => infId !== id) : [...prev, id]
@@ -282,13 +332,7 @@ export default function NewCampaignPage() {
   };
 
   const finalizeCampaign = () => {
-    toast({
-      title: "Campaign created successfully!",
-      description: `Campaign "${form.getValues(
-        "title"
-      )}" has been created with ${selectedInfluencers.length} influencers.`,
-    });
-    router.push("/campaigns");
+    form.handleSubmit(onSubmit)();
   };
 
   return (
@@ -357,6 +401,16 @@ export default function NewCampaignPage() {
                   "Define the type of creators you're looking for"}
               </CardDescription>
             </CardHeader>
+            {error && (
+              <div className="mx-6 p-4 bg-destructive/10 text-destructive rounded-md">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="mx-6 p-4 bg-green-100 text-green-800 rounded-md">
+                {success}
+              </div>
+            )}
             <CardContent className="space-y-6">
               {/* Step 1: Campaign Details */}
               {currentStep === 1 && (
@@ -421,13 +475,21 @@ export default function NewCampaignPage() {
                   />
                   <div className="space-y-2">
                     <FormLabel>Campaign Images (Optional)</FormLabel>
-                    <div className="border-2 border-dashed rounded-md p-8 text-center">
+                    <div
+                      {...getRootProps()}
+                      className={`border-2 border-dashed rounded-md p-8 text-center ${
+                        isDragActive ? "bg-primary/10" : ""
+                      }`}
+                    >
+                      <input {...getInputProps()} />
                       <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                           <Upload className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <p className="mt-2 text-sm font-medium">
-                          Drag & drop your images here
+                          {isDragActive
+                            ? "Drop your images here"
+                            : "Drag & drop your images here"}
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           Or click to browse (PNG, JPG up to 5MB)
@@ -437,6 +499,11 @@ export default function NewCampaignPage() {
                         </Button>
                       </div>
                     </div>
+                    {files.length > 0 && (
+                      <div className="text-sm text-muted-foreground">
+                        Selected: {files.map((file) => file.name).join(", ")}
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -486,7 +553,14 @@ export default function NewCampaignPage() {
                               <Input
                                 type="number"
                                 className="pl-7"
-                                {...field}
+                                value={field.value ?? ""}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    e.target.value
+                                      ? Number(e.target.value)
+                                      : undefined
+                                  )
+                                }
                               />
                             </div>
                           </FormControl>
@@ -516,38 +590,33 @@ export default function NewCampaignPage() {
                               key={platform.id}
                               control={form.control}
                               name="platforms"
-                              render={({ field }) => {
-                                return (
-                                  <FormItem
-                                    key={platform.id}
-                                    className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"
-                                  >
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(
-                                          platform.id
-                                        )}
-                                        onCheckedChange={(checked) => {
-                                          return checked
-                                            ? field.onChange([
-                                                ...field.value,
-                                                platform.id,
-                                              ])
-                                            : field.onChange(
-                                                field.value?.filter(
-                                                  (value) =>
-                                                    value !== platform.id
-                                                )
-                                              );
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="cursor-pointer font-normal">
-                                      {platform.label}
-                                    </FormLabel>
-                                  </FormItem>
-                                );
-                              }}
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value?.includes(
+                                        platform.id
+                                      )}
+                                      onCheckedChange={(checked) => {
+                                        return checked
+                                          ? field.onChange([
+                                              ...field.value,
+                                              platform.id,
+                                            ])
+                                          : field.onChange(
+                                              field.value?.filter(
+                                                (value) => value !== platform.id
+                                              )
+                                            );
+                                      }}
+                                      aria-label={`Select ${platform.label}`}
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="cursor-pointer font-normal">
+                                    {platform.label}
+                                  </FormLabel>
+                                </FormItem>
+                              )}
                             />
                           ))}
                         </div>
@@ -583,53 +652,50 @@ export default function NewCampaignPage() {
                   <FormField
                     control={form.control}
                     name="languagePreferences"
-                    render={({ field }) => (
+                    render={() => (
                       <FormItem>
-                        <FormLabel>Language Preferences</FormLabel>
+                        <div className="mb-4">
+                          <FormLabel>Language Preferences</FormLabel>
+                          <FormDescription>
+                            Languages your campaign content should be in
+                          </FormDescription>
+                        </div>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                           {languages.map((language) => (
                             <FormField
                               key={language.id}
                               control={form.control}
                               name="languagePreferences"
-                              render={({ field }) => {
-                                return (
-                                  <FormItem
-                                    key={language.id}
-                                    className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"
-                                  >
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(
-                                          language.id
-                                        )}
-                                        onCheckedChange={(checked) => {
-                                          return checked
-                                            ? field.onChange([
-                                                ...field.value,
-                                                language.id,
-                                              ])
-                                            : field.onChange(
-                                                field.value?.filter(
-                                                  (value) =>
-                                                    value !== language.id
-                                                )
-                                              );
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="cursor-pointer font-normal">
-                                      {language.label}
-                                    </FormLabel>
-                                  </FormItem>
-                                );
-                              }}
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value?.includes(
+                                        language.id
+                                      )}
+                                      onCheckedChange={(checked) => {
+                                        return checked
+                                          ? field.onChange([
+                                              ...field.value,
+                                              language.id,
+                                            ])
+                                          : field.onChange(
+                                              field.value?.filter(
+                                                (value) => value !== language.id
+                                              )
+                                            );
+                                      }}
+                                      aria-label={`Select ${language.label}`}
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="cursor-pointer font-normal">
+                                    {language.label}
+                                  </FormLabel>
+                                </FormItem>
+                              )}
                             />
                           ))}
                         </div>
-                        <FormDescription>
-                          Languages your campaign content should be in
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -695,7 +761,17 @@ export default function NewCampaignPage() {
                         <FormItem>
                           <FormLabel>Maximum Followers (Optional)</FormLabel>
                           <FormControl>
-                            <Input type="number" {...field} />
+                            <Input
+                              type="number"
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value
+                                    ? Number(e.target.value)
+                                    : undefined
+                                )
+                              }
+                            />
                           </FormControl>
                           <FormDescription>
                             Maximum follower count (if any)
@@ -717,147 +793,24 @@ export default function NewCampaignPage() {
               >
                 Previous
               </Button>
-              {currentStep < totalSteps ? (
-                <Button type="button" onClick={nextStep}>
-                  Next
-                </Button>
-              ) : (
-                <Button type="submit" disabled={submitting}>
-                  {submitting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Create Campaign
-                </Button>
-              )}
+              <div className="flex gap-2">
+                {currentStep < totalSteps ? (
+                  <Button type="button" onClick={nextStep}>
+                    Next
+                  </Button>
+                ) : (
+                  <Button type="submit" disabled={submitting}>
+                    {submitting && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Create Campaign
+                  </Button>
+                )}
+              </div>
             </CardFooter>
           </Card>
         </form>
       </Form>
-
-      {/* Recommendations Dialog */}
-      <Dialog open={showRecommendations} onOpenChange={setShowRecommendations}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Recommended Influencers</DialogTitle>
-            <DialogDescription>
-              AI-powered recommendations based on your campaign criteria
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search influencers..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-2">Top Picks</h4>
-              <ScrollArea className="whitespace-nowrap py-2">
-                <div className="flex space-x-4 pb-2">
-                  {mockInfluencers.map((influencer) => (
-                    <div
-                      key={influencer.id}
-                      className="w-[150px] text-center space-y-2"
-                    >
-                      <Avatar className="h-20 w-20 mx-auto border-2 border-muted p-1">
-                        <AvatarImage
-                          src={influencer.avatar}
-                          alt={influencer.name}
-                        />
-                        <AvatarFallback>{influencer.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium truncate">
-                          {influencer.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {influencer.handle}
-                        </p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant={
-                          selectedInfluencers.includes(influencer.id)
-                            ? "default"
-                            : "outline"
-                        }
-                        className="w-full"
-                        onClick={() => toggleInfluencer(influencer.id)}
-                      >
-                        {selectedInfluencers.includes(influencer.id)
-                          ? "Selected"
-                          : "Select"}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-2">
-              <h4 className="font-semibold mb-2">
-                Personalized Search Results
-              </h4>
-              <div className="space-y-2">
-                {filteredInfluencers.map((influencer) => (
-                  <div
-                    key={influencer.id}
-                    className={`flex items-center gap-4 p-2 rounded-md ${
-                      selectedInfluencers.includes(influencer.id)
-                        ? "bg-primary/10 border border-primary/20"
-                        : "hover:bg-muted/50"
-                    }`}
-                  >
-                    <Checkbox
-                      id={`select-${influencer.id}`}
-                      checked={selectedInfluencers.includes(influencer.id)}
-                      onCheckedChange={() => toggleInfluencer(influencer.id)}
-                    />
-                    <Avatar>
-                      <AvatarImage
-                        src={influencer.avatar}
-                        alt={influencer.name}
-                      />
-                      <AvatarFallback>{influencer.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 grid grid-cols-2 gap-2">
-                      <div>
-                        <p className="font-medium">{influencer.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {influencer.handle}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm">
-                          {influencer.followers.toLocaleString()} followers
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Engagement: {influencer.engagement}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="flex items-center justify-between">
-            <div className="text-sm">
-              {selectedInfluencers.length} influencers selected
-            </div>
-            <Button onClick={finalizeCampaign}>Finalize Campaign</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
