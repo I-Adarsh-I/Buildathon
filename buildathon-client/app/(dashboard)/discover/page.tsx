@@ -35,7 +35,10 @@ export default function DiscoverPage() {
         const res = await axios.get(
           `${process.env.NEXT_PUBLIC_URL}/campaigns/all`,
           {
-            withCredentials: true, // 👈 Needed for cookie-based auth
+            withCredentials: true,
+            headers: {
+              "ngrok-skip-browser-warning": "true", // Add this header
+            }, // 👈 Needed for cookie-based auth
             // headers: { Authorization: `Bearer ${token}` } // 👈 Uncomment for JWT
           }
         );
