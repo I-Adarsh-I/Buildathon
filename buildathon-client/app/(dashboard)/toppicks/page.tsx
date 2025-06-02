@@ -18,6 +18,7 @@ import type { Influencer } from '../../../lib/types'; // Still needed for the di
 // Import the new reusable component
 import { InfluencerCard } from '@/components/influencer-card'; // Adjust this path if necessary
 import Link from 'next/link';
+import axios from 'axios';
 
 // Define your mock data (can be moved to a separate file if it gets large)
 const mockInfluencers: Influencer[] = [
@@ -158,6 +159,49 @@ export default function RecommendationsPage() {
     }
   };
 
+  const callHandler = async () => {
+    
+    try {
+      const secondApiData = JSON.parse(localStorage.getItem("CallAPI") || "{}");
+
+      // console.log("Butterfly", secondApiData);
+
+      try {
+        const secondResp = await axios.post(
+          "https://7d32-103-253-173-168.ngrok-free.app/api/v1/ai/agent-call", // <--- REPLACE with your actual second API route
+          secondApiData,
+          {
+            withCredentials: true,
+            headers: {
+              "ngrok-skip-browser-warning": "true", // Add this header
+            },
+          }
+        );
+        console.log("Secondary API response: ", secondResp.data);
+      } catch (secondApiErr: any) {
+        console.error("Error during secondary API call:", secondApiErr);
+        // Do NOT set global error, as the primary action was successful
+      }
+
+      // reset(); // Reset the form fields
+      // setFiles([]); // Clear selected files from dropzone
+    } catch (err: any) {
+      // This catch block handles errors from the *first* API call
+      console.error("Error creating campaign:", err);
+      // setError(
+      //   err.response?.data?.message ||
+      //     err.message ||
+      //     "An error occurred during campaign creation."
+      // );
+      // toast({
+      //   title: "Campaign Creation Failed",
+      //   description: err.response?.data?.message || "Please try again.",
+      //   variant: "destructive",
+      // });
+    } finally {
+    }
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div>
@@ -261,7 +305,8 @@ export default function RecommendationsPage() {
                 <p className="font-medium mb-2">Bio:</p>
                 <p className="text-sm text-muted-foreground">{dialogInfluencer.bio || 'No bio available.'}</p>
               </div>
-              {dialogInfluencer.platformLinks && (
+              <Button onClick={() => callHandler()}>Initiate Call</Button>
+              {/* {dialogInfluencer.platformLinks && (
                 <div>
                   <p className="font-medium mb-2">Platforms:</p>
                   <div className="flex flex-wrap gap-2">
@@ -274,7 +319,7 @@ export default function RecommendationsPage() {
                     ))}
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
           </DialogContent>
         )}
