@@ -261,11 +261,14 @@ export default function NewCampaignPage() {
         formData,
         {
           withCredentials: true,
+          headers: {
+            "ngrok-skip-browser-warning": "true", // Add this header
+          },
         }
       );
 
       console.log("Campaign creation API response: ", campaignResp.data);
-      const campaignDetails = campaignResp.data
+      const campaignDetails = campaignResp.data;
       toast({
         title: "Campaign Created!",
         description: "Your campaign has been successfully launched.",
@@ -275,18 +278,20 @@ export default function NewCampaignPage() {
       // --- Second API Call (After first one completes successfully) ---
       // Example: If the second API needs the ID of the newly created campaign
       const secondApiData = {
-        hashtags: campaignDetails.hashtags || "",
-        platforms: campaignDetails.platform,
-        niche: "Trimmer",
-        // ... any other data required by the second API
+        title: campaignDetails.campaign.title,
       };
+
+      console.log("Butterfly", secondApiData);
 
       try {
         const secondResp = await axios.post(
-          "https://7063-103-253-173-168.ngrok-free.app/api/v1/ai/influencer-match", // <--- REPLACE with your actual second API route
+          "https://7d32-103-253-173-168.ngrok-free.app/api/v1/ai/influencer-match", // <--- REPLACE with your actual second API route
           secondApiData,
           {
             withCredentials: true,
+            headers: {
+              "ngrok-skip-browser-warning": "true", // Add this header
+            },
           }
         );
         console.log("Secondary API response: ", secondResp.data);

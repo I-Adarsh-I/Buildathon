@@ -47,7 +47,8 @@ export type DeliverableType = "post" | "story" | "reel" | "video" | "tweet";
 
 export interface Campaign {
   _id: string; // Mongoose-generated ObjectId (stringified)
-  title: string; // corresponds to name/title
+  title: string;
+  name: string; // corresponds to name/title
   objective: string;
   images: string[];
   budget: {
