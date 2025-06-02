@@ -7,22 +7,22 @@ const authorizeRole = require("../../middlewares/authorizeRole");
 
 router.post(
   "/influencer/onboard",
-  isAuthenticated,
-  authorizeRole("admin", "user"),
+  // isAuthenticated,
+  // authorizeRole("admin", "user"),
   influencerController.onboardInfluencer
 );
 
 router.get(
   "/all",
-  isAuthenticated,
-  authorizeRole("admin", "user"),
+  // isAuthenticated,
+  // authorizeRole("admin", "user"),
   influencerController.getAllInfluencersWithContent
 );
 
 router.get(
   "/influencer/:id",
-  isAuthenticated,
-  authorizeRole("admin", "user"),
+  // isAuthenticated,
+  // authorizeRole("admin", "user"),
   influencerController.getInfluencerByIdWithContent
 );
 

@@ -12,6 +12,7 @@ module.exports = (req, res, next) => {
       return next();
     } else {
       // Not logged in
+      console.log("User is not authenticated");
       return res.status(401).json({
         message: 'Unauthorized: Please log in to access this resource.'
       });

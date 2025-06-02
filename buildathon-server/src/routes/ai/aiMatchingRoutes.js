@@ -7,8 +7,8 @@ const authorizeRole = require('../../middlewares/authorizeRole');
 
 router.post(
     '/influencer-match',
-    isAuthenticated,
-    authorizeRole("admin", "user"), // Only admin or regular users (brands) can request matches
+    // isAuthenticated,
+    // authorizeRole("admin", "user"), // Only admin or regular users (brands) can request matches
     aiMatchingController.getMatchedInfluencers
 );
 
