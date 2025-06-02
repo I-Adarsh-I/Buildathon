@@ -14,9 +14,7 @@ import {
   FileText,
   Settings,
   Menu,
-  X,
   LogOut,
-  User,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -36,7 +34,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
   useEffect(() => {
     const fetchUser = async () => {
       const currentUser = await getCurrentUser();
-      console.log(currentUser);
       setUser(currentUser);
       setLoading(false);
     };
@@ -45,7 +42,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   }, []);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user_data");
+    const storedUser = localStorage.getItem("userInfo");
     if (storedUser) {
       setUserInfo(JSON.parse(storedUser));
     }
@@ -54,6 +51,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   if (loading) {
     return <Loader text="Loading dashboard..." className="h-screen" />;
   }
+  
   const isBrand = user?.role === "brand";
 
   const routes = [
@@ -109,7 +107,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           <ThemeToggle />
           <Link href="/settings">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={userInfo?.profileImg} />
+              <AvatarImage src={userInfo?.profilePhoto} />
               <AvatarFallback>{userInfo?.name?.charAt(0) || "U"}</AvatarFallback>
             </Avatar>
           </Link>
@@ -125,7 +123,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 <div className="border-b p-4">
                   <div className="flex items-center gap-2 mb-4">
                     <Avatar>
-                      <AvatarImage src={userInfo?.profileImg} />
+                      <AvatarImage src={userInfo?.profilePhoto} />
                       <AvatarFallback>
                         {userInfo?.name?.charAt(0) || "U"}
                       </AvatarFallback>
@@ -207,7 +205,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Avatar className="h-8 w-8 mr-2">
-                  <AvatarImage src={userInfo?.profileImg} />
+                  <AvatarImage src={userInfo?.profilePhoto} />
                   <AvatarFallback>
                     {userInfo?.name?.charAt(0) || "U"}
                   </AvatarFallback>

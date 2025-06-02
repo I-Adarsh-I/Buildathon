@@ -90,8 +90,6 @@ export default function LoginPage() {
           credentials: "include", // Essential for sending session cookie
         });
         const data = await res.json();
-        // console.log("Auth status check response:", data);
-        localStorage.setItem("user_data", JSON.stringify(data.user))
 
         if (res.ok && data.success) {
           setUser(data.user);

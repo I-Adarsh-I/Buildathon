@@ -18,6 +18,28 @@ export interface User {
   updatedAt: string;
 }
 
+// src/types/influencer.ts
+
+// src/types/influencer.ts
+
+export interface Influencer {
+  id: string;
+  name: string;
+  handle: string;
+  avatar: string;
+  niche: string;
+  followers: number;
+  engagement: string;
+  bio: string;
+  // Explicitly list each possible platform as optional
+  platformLinks?: {
+    instagram?: string;
+    youtube?: string;
+    twitter?: string;
+    // Add any other platforms you expect here
+  };
+}
+
 // Campaign types
 export type CampaignStatus = "draft" | "active" | "completed" | "cancelled";
 export type Platform = "instagram" | "youtube" | "tiktok" | "twitter";
