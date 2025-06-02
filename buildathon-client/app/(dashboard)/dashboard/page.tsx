@@ -85,8 +85,8 @@ const recentActivities = [
 ];
 
 export default function Dashboard() {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
+  // const [loading, setLoading] = useState(true);
+  // const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState(null);
   const [noOfCampaigns, setNoOfCampaigns] = useState(0);
   const userRole = getUserRole();
@@ -94,25 +94,28 @@ export default function Dashboard() {
   let no_of_campaigns;
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_URL}/user/me`,
-          {
-            withCredentials: true, // Required for cookie-based auth
-          }
-        );
-        const { email, profilePhoto, name, role } = response.data.user;
-        const filteredUser = { email, profilePhoto, name, role };
-        localStorage.setItem("userInfo", JSON.stringify(filteredUser));
-        setUser(response.data.user);
-        setLoading(false);
-      } catch (err: any) {
-        setError(err.response?.data?.message || "Failed to fetch user data");
-        setLoading(false);
-      }
-    };
+    // const fetchCurrentUser = async () => {
+    //   try {
+    //     setLoading(true);
+    //     const response = await axios.get(
+    //       `${process.env.NEXT_PUBLIC_URL}/user/me`,
+    //       {
+    //         withCredentials: true,
+    //         headers: {
+    //           "ngrok-skip-browser-warning": "true", // Add this header
+    //         }, // Required for cookie-based auth
+    //       }
+    //     );
+    //     const { email, profilePhoto, name, role } = response.data.user;
+    //     const filteredUser = { email, profilePhoto, name, role };
+    //     localStorage.setItem("userInfo", JSON.stringify(filteredUser));
+    //     setUser(response.data.user);
+    //     setLoading(false);
+    //   } catch (err: any) {
+    //     setError(err.response?.data?.message || "Failed to fetch user data");
+    //     setLoading(false);
+    //   }
+    // };
 
     // Fetch campaigns (as per your existing code)
     const fetchCampaigns = async () => {
@@ -121,17 +124,23 @@ export default function Dashboard() {
           `${process.env.NEXT_PUBLIC_URL}/campaigns/all`,
           {
             withCredentials: true,
+            headers: {
+              "ngrok-skip-browser-warning": "true", // Add this header
+            },
           }
         );
         const campaigns = res.data;
         setNoOfCampaigns(campaigns.length);
-        localStorage.setItem("no_of_campaigns", campaigns.length);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("no_of_campaigns", campaigns.length.toString()); // localStorage stores strings
+        }
+        // localStorage.setItem("no_of_campaigns", campaigns.length);
       } catch (error) {
         console.error("Error fetching campaigns:", error);
       }
     };
 
-    fetchCurrentUser();
+    // fetchCurrentUser();
     fetchCampaigns();
   }, []);
 
@@ -153,15 +162,17 @@ export default function Dashboard() {
     },
   });
 
-  no_of_campaigns = localStorage.getItem("no_of_campaigns");
+  if (typeof window !== "undefined") {
+    const storedCampaigns = localStorage.getItem("no_of_campaigns");
+  }
   // userInfo = localStorage.getItem("userInfo");
 
-  if (loading) return <div>Loading...</div>;
+  // if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
-  if (loading) {
-    return <Loader text="Loading..." className="h-screen" />;
-  }
+  // if (loading) {
+  //   return <Loader text="Loading..." className="h-screen" />;
+  // }
 
   return (
     <div className="space-y-8">
@@ -169,7 +180,8 @@ export default function Dashboard() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back, {user?.name || "User"}.
+            {/* Welcome back, {user?.name || "User"}. */}
+            Welcome back, AI Alchemist.
           </p>
         </div>
 
@@ -193,7 +205,7 @@ export default function Dashboard() {
           <>
             <OverviewCard
               title="Total Campaigns"
-              value={`${no_of_campaigns}`}
+              value={`${noOfCampaigns}`}
               description="2 active, 1 draft"
               icon={<BarChart2 className="h-4 w-4" />}
               variant="blue"

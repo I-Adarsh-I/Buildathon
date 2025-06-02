@@ -41,16 +41,16 @@ export default function MainLayout({ children }: MainLayoutProps) {
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("userInfo");
-    if (storedUser) {
-      setUserInfo(JSON.parse(storedUser));
-    }
-  }, []);
+  // useEffect(() => {
+  //   const storedUser = localStorage.getItem("userInfo");
+  //   if (storedUser) {
+  //     setUserInfo(JSON.parse(storedUser));
+  //   }
+  // }, []);
 
-  if (loading) {
-    return <Loader text="Loading dashboard..." className="h-screen" />;
-  }
+  // if (loading) {
+  //   return <Loader text="Loading dashboard..." className="h-screen" />;
+  // }
   
   const isBrand = user?.role === "brand";
 
